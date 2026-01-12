@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'GetRewards_page.dart';
 import 'MyRewards_page.dart';
+import '../core/session_store.dart';
+import 'login_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -10,16 +12,148 @@ class HomePage extends StatelessWidget {
   static const Color tealMid = Color(0xFF4F8C97);
   static const Color tealLight = Color(0xFF9ED0DA);
 
+  String _formatPoints(int points) {
+    final s = points.toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      final reverseIndex = s.length - i;
+      buf.write(s[i]);
+      if (reverseIndex > 1 && reverseIndex % 3 == 1) {
+        buf.write(',');
+      }
+    }
+    return buf.toString();
+  }
+
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: tealDark, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Are you sure you want to logout?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: tealDark,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "NO",
+                          style: TextStyle(
+                            color: tealDark,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+
+                          // ✅ Clear session (logout)
+                          SessionStore.current = null;
+
+                          // ✅ back to login
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginPage(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: tealDark,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: const Text(
+                          "YES",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final session = SessionStore.current;
+
+    final String name = (session?.name.trim().isNotEmpty ?? false)
+        ? session!.name
+        : '—';
+
+    final String phone = (session?.phoneNumber.trim().isNotEmpty ?? false)
+        ? session!.phoneNumber
+        : '—';
+
+    final String points = (session != null)
+        ? _formatPoints(session.totalPoints)
+        : '0';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
+
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: () => Navigator.pop(context),
+          icon: Image.asset(
+            'assets/images/logout.png',
+            width: 24,
+            height: 24,
+            fit: BoxFit.contain,
+          ),
+          onPressed: () => _showLogoutDialog(context),
         ),
       ),
       extendBodyBehindAppBar: true,
@@ -40,24 +174,19 @@ class HomePage extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 8),
-
                 Image.asset(
                   'assets/images/logo_name.png',
                   height: 42,
                   fit: BoxFit.contain,
                 ),
-
                 const SizedBox(height: 18),
-
-                const _LoyaltyCard(
+                _LoyaltyCard(
                   logoPath: 'assets/images/logo3.png',
-                  name: 'Mira Alsakran',
-                  phone: '0791234567',
-                  points: '1,250',
+                  name: name,
+                  phone: phone,
+                  points: points,
                 ),
-
                 const SizedBox(height: 22),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -87,7 +216,6 @@ class HomePage extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 70),
                 const Text(
                   'SHOP · EARN · YALLA!',
@@ -133,7 +261,6 @@ class _LoyaltyCard extends StatelessWidget {
 
     const double pointsFont = 40;
     const double pointsWordFont = 20;
-
     const double starSize = 34;
 
     return Container(
@@ -180,9 +307,7 @@ class _LoyaltyCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -219,12 +344,9 @@ class _LoyaltyCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 14),
           const Divider(color: Colors.white38, thickness: 1),
-
           const SizedBox(height: 10),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

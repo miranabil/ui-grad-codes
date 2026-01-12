@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  dio: ^5.7.0
 
 dev_dependencies:
   flutter_test:
@@ -29,8 +30,8 @@ flutter:
     - assets/images/bag.png
     - assets/images/discount.png
     - assets/images/coupon.png
+    - assets/images/logout.png
     
-
   fonts:
     - family: Judson
       fonts:

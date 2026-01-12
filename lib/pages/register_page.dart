@@ -1,13 +1,34 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
 import 'login_page.dart';
 import 'verify_page.dart';
+import '../Services/auth_service.dart';
+import '../core/session_store.dart';
+import '../models/user_session.dart';
+import '../core/error_popup.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
   static const Color primaryTeal = Color(0xFF1D5D6D);
-  static const Color createButtonColor = Color(0xFF3C7381); // ✅ اللون الجديد
+  static const Color createButtonColor = Color(0xFF3C7381);
+
+  final AuthService _auth = AuthService();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
+  final TextEditingController _confirmController = TextEditingController();
+
+  bool _loading = false;
 
   InputDecoration _pillInput(String hint) {
     return InputDecoration(
@@ -31,26 +52,119 @@ class RegisterPage extends StatelessWidget {
     );
   }
 
+  ({String message, bool isApiError}) _extractApiMessage(dynamic data) {
+    if (data == null) return (message: "", isApiError: false);
+
+    if (data is String) {
+      final s = data.trim();
+      if (s.startsWith("{") && s.endsWith("}")) {
+        try {
+          final decoded = jsonDecode(s);
+          return _extractApiMessage(decoded);
+        } catch (_) {
+          return (message: s, isApiError: false);
+        }
+      }
+      return (message: s, isApiError: false);
+    }
+
+    if (data is Map) {
+      if (data["error"] is Map) {
+        final err = data["error"] as Map;
+        final msg = (err["message"] ?? "").toString().trim();
+        if (msg.isNotEmpty) return (message: msg, isApiError: true);
+      }
+
+      if (data["message"] != null) {
+        final msg = data["message"].toString().trim();
+        if (msg.isNotEmpty) return (message: msg, isApiError: true);
+      }
+
+      return (message: data.toString(), isApiError: false);
+    }
+
+    return (message: data.toString(), isApiError: false);
+  }
+
+  Future<void> _doCreate() async {
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final pass = _passController.text;
+    final confirm = _confirmController.text;
+
+    if (name.isEmpty || phone.isEmpty || pass.isEmpty || confirm.isEmpty) {
+      await ErrorPopup.show(context, message: "Please fill all fields.");
+      return;
+    }
+    if (pass != confirm) {
+      await ErrorPopup.show(
+        context,
+        message: "Password and confirm password do not match.",
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final UserSession session = await _auth.loginOrRegister(
+        phoneNumber: phone,
+        password: pass,
+        name: name,
+      );
+
+      SessionStore.current = session;
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const VerifyPage()),
+      );
+    } on DioException catch (e) {
+      final extracted = _extractApiMessage(e.response?.data);
+
+      if (extracted.isApiError && extracted.message.isNotEmpty) {
+        await ErrorPopup.show(context, message: extracted.message);
+      } else {
+        final fallback = extracted.message.isNotEmpty
+            ? extracted.message
+            : (e.message?.trim().isNotEmpty ?? false)
+            ? e.message!.trim()
+            : "Something went wrong. Please try again.";
+        await ErrorPopup.show(context, message: fallback);
+      }
+    } catch (e) {
+      await ErrorPopup.show(context, message: "Create failed: $e");
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _passController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final h = size.height;
+    final h = MediaQuery.of(context).size.height;
 
     final topGap = h * 0.14;
     final fieldsTopGap = h * 0.055;
-    final bottomSpace = h * 0.05; // ✅ أقل = رفع الجملة لفوق
-
-    // بداية التدرج مثل الصورة
+    final bottomSpace = h * 0.05;
     final gradientStart = h * 0.55;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // خلفية بيضاء
           const Positioned.fill(child: ColoredBox(color: Colors.white)),
 
-          // التدرج من الأسفل فقط
           Positioned(
             left: 0,
             right: 0,
@@ -103,60 +217,71 @@ class RegisterPage extends StatelessWidget {
 
                     SizedBox(height: fieldsTopGap),
 
-                    TextField(decoration: _pillInput('Full name')),
-                    const SizedBox(height: 16),
-                    TextField(decoration: _pillInput('Phone number')),
-                    const SizedBox(height: 16),
                     TextField(
+                      controller: _nameController,
+                      decoration: _pillInput('Full name'),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: _pillInput('Phone number'),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: _passController,
                       obscureText: true,
                       decoration: _pillInput('Create password'),
                     ),
                     const SizedBox(height: 16),
+
                     TextField(
+                      controller: _confirmController,
                       obscureText: true,
                       decoration: _pillInput('Confirm password'),
                     ),
 
                     const SizedBox(height: 28),
 
-                    // زر create
                     Align(
                       alignment: Alignment.centerRight,
                       child: SizedBox(
                         height: 44,
                         width: 130,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const VerifyPage(),
-                              ),
-                            );
-                          },
+                          onPressed: _loading ? null : _doCreate,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                createButtonColor, // ✅ اللون الجديد
+                            backgroundColor: createButtonColor,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(26),
                             ),
                           ),
-                          child: const Text(
-                            'create', // ✅ النص الجديد
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'create',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
                       ),
                     ),
 
                     SizedBox(height: bottomSpace),
 
-                    // الجملة مرفوعة لبداية الأبيض
                     RichText(
                       text: TextSpan(
                         style: const TextStyle(

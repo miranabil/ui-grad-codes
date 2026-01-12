@@ -4,42 +4,31 @@ import 'home_page.dart';
 class MyRewardsPage extends StatelessWidget {
   const MyRewardsPage({super.key});
 
-  // Figma frame (Pixel 5)
   static const double designW = 393;
   static const double designH = 851;
 
-  // Background gradient
   static const Color topColor = Color(0xFFF8F8F8);
   static const Color bottomColor = Color(0xFF1D5D6D);
 
-  // Header positions (same layout style as GetRewards)
-  // Title in your GetRewards was at (105,40). For "My Rewards" it often needs slight left shift,
-  // but I'll keep the SAME X unless you want to adjust in figma.
   static const double titleX = 105, titleY = 40;
 
-  // Subtitle (two lines) - keep same starting X/Y as prototype feel
   static const double subX = 70, subY = 86;
 
-  // Coupon dimensions & spacing (same as GetRewards)
   static const double couponW = 329, couponH = 129;
   static const double couponX = 32, couponY = 155;
   static const double couponGap = 16;
 
-  // Inside coupon positions (same as your LAST GetRewards code)
-  static const double cTitleRelX = 66 - couponX; // 34
-  static const double cTitleRelY = 169 - couponY - 8; // moved up like your last
+  static const double cTitleRelX = 66 - couponX;
+  static const double cTitleRelY = 169 - couponY - 8;
 
-  static const double cDescRelX =
-      98 - couponX - 8; // moved a bit left like your last
-  static const double cDescRelY = 211 - couponY; // 56
+  static const double cDescRelX = 98 - couponX - 8;
+  static const double cDescRelY = 211 - couponY;
 
-  // بدل points: ID مكانه كان points
-  static const double cIdRelX = 45 - couponX; // 13
-  static const double cIdRelY = 244 - couponY + 8; // moved down like your last
+  static const double cIdRelX = 45 - couponX;
+  static const double cIdRelY = 244 - couponY + 8;
 
-  static const double cTimeRelX = 248 - couponX; // 216
-  static const double cTimeRelY =
-      238 - couponY + 8; // moved down like your last
+  static const double cTimeRelX = 248 - couponX;
+  static const double cTimeRelY = 238 - couponY + 8;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +67,6 @@ class MyRewardsPage extends StatelessWidget {
         child: SafeArea(
           child: Stack(
             children: [
-              // Back arrow
               Positioned(
                 left: 8,
                 top: 4,
@@ -92,7 +80,6 @@ class MyRewardsPage extends StatelessWidget {
                 ),
               ),
 
-              // Title
               Positioned(
                 left: titleX * s,
                 top: titleY * s,
@@ -107,7 +94,6 @@ class MyRewardsPage extends StatelessWidget {
                 ),
               ),
 
-              // Subtitle (two lines)
               Positioned(
                 left: subX * s,
                 top: subY * s,
@@ -186,7 +172,7 @@ class MyRewardCouponWidget extends StatelessWidget {
       child: Ink(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          // مثل GetRewards: بدون ظل
+
           boxShadow: const [],
         ),
         child: ClipRRect(
@@ -200,7 +186,6 @@ class MyRewardCouponWidget extends StatelessWidget {
                 ),
               ),
 
-              // Title
               Positioned(
                 left: titleRelX * scale,
                 top: titleRelY * scale,
@@ -219,7 +204,6 @@ class MyRewardCouponWidget extends StatelessWidget {
                 ),
               ),
 
-              // Description (single line)
               Positioned(
                 left: descRelX * scale,
                 top: descRelY * scale,
@@ -240,7 +224,6 @@ class MyRewardCouponWidget extends StatelessWidget {
                 ),
               ),
 
-              // ID (instead of points)
               Positioned(
                 left: idRelX * scale,
                 top: idRelY * scale,
@@ -259,7 +242,6 @@ class MyRewardCouponWidget extends StatelessWidget {
                 ),
               ),
 
-              // Time block bottom-right
               Positioned(
                 left: timeRelX * scale,
                 top: timeRelY * scale,

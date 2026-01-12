@@ -33,6 +33,12 @@ class VerifyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
 
+    final f1 = FocusNode();
+    final f2 = FocusNode();
+    final f3 = FocusNode();
+    final f4 = FocusNode();
+    final focusList = [f1, f2, f3, f4];
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -81,16 +87,33 @@ class VerifyPage extends StatelessWidget {
                         SizedBox(height: h * 0.06),
 
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(4, (index) {
-                            return SizedBox(
-                              width: 60,
-                              height: 48,
-                              child: TextField(
-                                maxLength: 1,
-                                textAlign: TextAlign.center,
-                                keyboardType: TextInputType.number,
-                                decoration: _otpInput(),
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              child: SizedBox(
+                                width: 60,
+                                height: 48,
+                                child: TextField(
+                                  focusNode: focusList[index],
+                                  maxLength: 1,
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.number,
+                                  decoration: _otpInput(),
+                                  onChanged: (v) {
+                                    if (v.length == 1) {
+                                      if (index < 3) {
+                                        FocusScope.of(
+                                          context,
+                                        ).requestFocus(focusList[index + 1]);
+                                      } else {
+                                        FocusScope.of(context).unfocus();
+                                      }
+                                    }
+                                  },
+                                ),
                               ),
                             );
                           }),
@@ -98,7 +121,6 @@ class VerifyPage extends StatelessWidget {
 
                         SizedBox(height: h * 0.03),
 
-                        // ✅ نفس الجملة مثل الصورة + ترجع للرجستر
                         RichText(
                           text: TextSpan(
                             text: 'Edit Phone number',
@@ -149,7 +171,6 @@ class VerifyPage extends StatelessWidget {
                           height: 46,
                           child: ElevatedButton(
                             onPressed: () {
-                              // ✅ يودّي على الهوم
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
@@ -176,7 +197,7 @@ class VerifyPage extends StatelessWidget {
                           ),
                         ),
 
-                        const Spacer(), // ✅ صار آمن الآن بسبب IntrinsicHeight
+                        const Spacer(),
                         SizedBox(height: h * 0.02),
                       ],
                     ),

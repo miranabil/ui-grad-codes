@@ -1,12 +1,31 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
 import 'home_page.dart';
 import 'register_page.dart';
+import '../Services/auth_service.dart';
+import '../core/session_store.dart';
+import '../models/user_session.dart';
+import '../core/error_popup.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   static const Color primaryTeal = Color(0xFF1D5D6D);
+
+  final AuthService _auth = AuthService();
+
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _loading = false;
 
   InputDecoration _pillInput({
     required String hint,
@@ -38,6 +57,96 @@ class LoginPage extends StatelessWidget {
     );
   }
 
+  ({String message, bool isApiError}) _extractApiMessage(dynamic data) {
+    if (data == null) return (message: "", isApiError: false);
+
+    if (data is String) {
+      final s = data.trim();
+      if (s.startsWith("{") && s.endsWith("}")) {
+        try {
+          final decoded = jsonDecode(s);
+          return _extractApiMessage(decoded);
+        } catch (_) {
+          return (message: s, isApiError: false);
+        }
+      }
+      return (message: s, isApiError: false);
+    }
+
+    if (data is Map) {
+      if (data["error"] is Map) {
+        final err = data["error"] as Map;
+        final msg = (err["message"] ?? "").toString().trim();
+        if (msg.isNotEmpty) return (message: msg, isApiError: true);
+      }
+
+      if (data["message"] != null) {
+        final msg = data["message"].toString().trim();
+        if (msg.isNotEmpty) return (message: msg, isApiError: true);
+      }
+
+      return (message: data.toString(), isApiError: false);
+    }
+
+    return (message: data.toString(), isApiError: false);
+  }
+
+  Future<void> _doLogin() async {
+    final phone = _phoneController.text.trim();
+    final pass = _passwordController.text;
+
+    if (phone.isEmpty || pass.isEmpty) {
+      await ErrorPopup.show(
+        context,
+        message: "Please enter phone number and password.",
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final UserSession session = await _auth.loginOrRegister(
+        phoneNumber: phone,
+        password: pass,
+        name: "",
+      );
+
+      SessionStore.current = session;
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } on DioException catch (e) {
+      final extracted = _extractApiMessage(e.response?.data);
+
+      if (extracted.isApiError && extracted.message.isNotEmpty) {
+        await ErrorPopup.show(context, message: extracted.message);
+      } else {
+        final fallback = extracted.message.isNotEmpty
+            ? extracted.message
+            : (e.message?.trim().isNotEmpty ?? false)
+            ? e.message!.trim()
+            : "Something went wrong. Please try again.";
+        await ErrorPopup.show(context, message: fallback);
+      }
+    } catch (e) {
+      await ErrorPopup.show(context, message: "Login failed: $e");
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
@@ -56,10 +165,10 @@ class LoginPage extends StatelessWidget {
             end: Alignment.bottomCenter,
             stops: [0.08, 0.34, 0.73, 1.0],
             colors: [
-              Color(0xFF9CCAD5), // 8%
-              Color(0xFFF8F8F8), // 34%
-              Color(0xFFF8F8F8), // 73%
-              Color(0xFF9CCAD5), // 100%
+              Color(0xFF9CCAD5),
+              Color(0xFFF8F8F8),
+              Color(0xFFF8F8F8),
+              Color(0xFF9CCAD5),
             ],
           ),
         ),
@@ -70,7 +179,6 @@ class LoginPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: topGap),
-
                 const Text(
                   'Login',
                   style: TextStyle(
@@ -80,7 +188,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-
                 RichText(
                   text: TextSpan(
                     style: const TextStyle(fontSize: 13, color: Colors.black54),
@@ -105,13 +212,15 @@ class LoginPage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 SizedBox(height: fieldsGap),
-
-                TextField(decoration: _pillInput(hint: 'Phone number')),
-                const SizedBox(height: 14),
-
                 TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: _pillInput(hint: 'Phone number'),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: _pillInput(
                     hint: 'Password',
@@ -137,21 +246,14 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 SizedBox(height: afterFieldsGap),
-
                 Align(
                   alignment: Alignment.centerRight,
                   child: SizedBox(
                     height: 44,
                     width: 120,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const HomePage()),
-                        );
-                      },
+                      onPressed: _loading ? null : _doLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryTeal,
                         elevation: 0,
@@ -159,18 +261,26 @@ class LoginPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24),
                         ),
                       ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Login',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ),
-
                 SizedBox(height: h * 0.10),
               ],
             ),
