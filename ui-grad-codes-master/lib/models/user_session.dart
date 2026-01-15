@@ -1,11 +1,17 @@
+import 'dart:async';
+import '../Services/user_info_service.dart';
+
 class UserSession {
   final String message;
   final String userId;
   final String phoneNumber;
   final String name;
-  final int totalPoints;
+  int totalPoints;
   final String role;
   final String sessionId;
+
+  static UserSession? current;
+  static Timer? _pointsTimer;
 
   UserSession({
     required this.message,
@@ -27,6 +33,22 @@ class UserSession {
       role: (json["role"] ?? "").toString(),
       sessionId: (json["sessionId"] ?? "").toString(),
     );
+  }
+
+  void startPointsAutoRefresh() {
+    _pointsTimer?.cancel();
+
+    _pointsTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      try {
+        final points = await UserInfoService.fetchUserPoints(userId);
+        totalPoints = points;
+      } catch (_) {}
+    });
+  }
+
+  static void stopPointsAutoRefresh() {
+    _pointsTimer?.cancel();
+    _pointsTimer = null;
   }
 
   static int _toInt(dynamic v) {

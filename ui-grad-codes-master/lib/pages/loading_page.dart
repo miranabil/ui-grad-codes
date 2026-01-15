@@ -15,15 +15,11 @@ class LoadingPage extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.59, 0.88],
-            colors: [
-              Color(0xFFFFFFFF), // #FFFFFF
-              Color(0xFF5CA8B9), // #5CA8B9
-            ],
+            colors: [Color(0xFFFFFFFF), Color(0xFF5CA8B9)],
           ),
         ),
         child: Stack(
           children: [
-            // اللوجو بالنص
             Center(
               child: Image.asset(
                 'assets/images/logo.png',
@@ -35,7 +31,6 @@ class LoadingPage extends StatelessWidget {
               ),
             ),
 
-            // زر Login or Register
             SafeArea(
               child: Align(
                 alignment: Alignment.bottomCenter,

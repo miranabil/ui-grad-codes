@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
 import '../models/my_reward_model.dart';
 import '../Services/my_rewards_service.dart';
 
@@ -9,7 +8,6 @@ class MyRewardsPage extends StatefulWidget {
   final String userId;
 
   static const double designW = 393;
-  static const double designH = 851;
 
   static const Color topColor = Color(0xFFF8F8F8);
   static const Color bottomColor = Color(0xFF1D5D6D);
@@ -43,8 +41,6 @@ class _MyRewardsPageState extends State<MyRewardsPage> {
   @override
   void initState() {
     super.initState();
-
-    /// 👈 نستخدم userId اللي جاي من الصفحة
     _futureRewards = MyRewardsService.fetchMyRewards(widget.userId);
   }
 
@@ -65,92 +61,104 @@ class _MyRewardsPageState extends State<MyRewardsPage> {
           ),
         ),
         child: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              // Back
-              Positioned(
-                left: 8,
-                top: 4,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomePage()),
-                    );
-                  },
+              SizedBox(
+                height: MyRewardsPage.couponY * s,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 8,
+                      top: 4,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.black87,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Positioned(
+                      left: MyRewardsPage.titleX * s,
+                      top: MyRewardsPage.titleY * s,
+                      child: Text(
+                        'My Rewards',
+                        style: TextStyle(
+                          fontFamily: 'Judson',
+                          fontSize: 32 * s,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+
+                    Positioned(
+                      left: MyRewardsPage.subX * s,
+                      top: MyRewardsPage.subY * s,
+                      child: Text(
+                        'Use your reward at checkout\nShow it to the cashier to apply the discount',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Judson',
+                          fontSize: 14 * s,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF4A9EB2),
+                          height: 1.15,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              // Title
-              Positioned(
-                left: MyRewardsPage.titleX * s,
-                top: MyRewardsPage.titleY * s,
-                child: Text(
-                  'My Rewards',
-                  style: TextStyle(
-                    fontFamily: 'Judson',
-                    fontSize: 32 * s,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
+              Expanded(
+                child: FutureBuilder<List<MyRewardModel>>(
+                  future: _futureRewards,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return const Center(
+                        child: Text('Failed to load rewards'),
+                      );
+                    }
 
-              // Subtitle
-              Positioned(
-                left: MyRewardsPage.subX * s,
-                top: MyRewardsPage.subY * s,
-                child: Text(
-                  'Use your reward at checkout\nShow it to the cashier to apply the discount',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Judson',
-                    fontSize: 14 * s,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF4A9EB2),
-                    height: 1.15,
-                  ),
-                ),
-              ),
+                    final rewards = snapshot.data!;
+                    if (rewards.isEmpty) {
+                      return const Center(child: Text('No rewards found'));
+                    }
 
-              /// ⭐️ CONTENT
-              FutureBuilder<List<MyRewardModel>>(
-                future: _futureRewards,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return const Center(child: Text('Failed to load rewards'));
-                  }
-
-                  final rewards = snapshot.data!;
-                  if (rewards.isEmpty) {
-                    return const Center(child: Text('No rewards found'));
-                  }
-
-                  return Stack(
-                    children: [
-                      for (int i = 0; i < rewards.length; i++)
-                        Positioned(
-                          left: MyRewardsPage.couponX * s,
-                          top:
-                              (MyRewardsPage.couponY +
-                                  i *
-                                      (MyRewardsPage.couponH +
-                                          MyRewardsPage.couponGap)) *
-                              s,
+                    return ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: MyRewardsPage.couponX * s,
+                      ),
+                      itemCount: rewards.length,
+                      itemBuilder: (context, i) {
+                        return Container(
                           width: MyRewardsPage.couponW * s,
                           height: MyRewardsPage.couponH * s,
+                          margin: EdgeInsets.only(
+                            bottom: MyRewardsPage.couponGap * s,
+                          ),
                           child: MyRewardCouponWidget(
                             scale: s,
                             reward: rewards[i],
                           ),
-                        ),
-                    ],
-                  );
-                },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -186,12 +194,15 @@ class MyRewardCouponWidget extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
+
               Positioned(
                 left: MyRewardsPage.cTitleRelX * scale,
                 top: MyRewardsPage.cTitleRelY * scale,
                 width: 210 * scale,
                 child: Text(
                   reward.couponType,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Judson',
                     fontSize: 26 * scale,
@@ -200,6 +211,7 @@ class MyRewardCouponWidget extends StatelessWidget {
                   ),
                 ),
               ),
+
               Positioned(
                 left: MyRewardsPage.cDescRelX * scale,
                 top: MyRewardsPage.cDescRelY * scale,
@@ -207,6 +219,8 @@ class MyRewardCouponWidget extends StatelessWidget {
                 child: Text(
                   reward.couponDescription,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Judson',
                     fontSize: 15 * scale,
@@ -214,6 +228,7 @@ class MyRewardCouponWidget extends StatelessWidget {
                   ),
                 ),
               ),
+
               Positioned(
                 left: MyRewardsPage.cIdRelX * scale,
                 top: MyRewardsPage.cIdRelY * scale,
@@ -227,14 +242,31 @@ class MyRewardCouponWidget extends StatelessWidget {
                   ),
                 ),
               ),
+
               Positioned(
-                left: MyRewardsPage.cTimeRelX * scale,
+                left: (MyRewardsPage.couponW - 120) * scale,
                 top: MyRewardsPage.cTimeRelY * scale,
+                width: 105 * scale,
+                height: 42 * scale,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Starts: ${reward.validFrom.substring(0, 10)}'),
-                    Text('Ends: ${reward.validUntil.substring(0, 10)}'),
+                    Text(
+                      'Starts: ${reward.validFrom.substring(0, 10)}',
+                      style: TextStyle(
+                        fontFamily: 'Judson',
+                        fontSize: 12 * scale,
+                      ),
+                    ),
+                    SizedBox(height: 5 * scale),
+                    Text(
+                      'Ends: ${reward.validUntil.substring(0, 10)}',
+                      style: TextStyle(
+                        fontFamily: 'Judson',
+                        fontSize: 12 * scale,
+                      ),
+                    ),
                   ],
                 ),
               ),

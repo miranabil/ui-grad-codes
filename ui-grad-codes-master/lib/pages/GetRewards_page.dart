@@ -14,19 +14,18 @@ class GetRewardsPage extends StatefulWidget {
 }
 
 class _GetRewardsPageState extends State<GetRewardsPage> {
-  // Figma frame (Pixel 5)
   static const double designW = 393;
-  // Background gradient
+
   static const Color topColor = Color(0xFFF8F8F8);
   static const Color bottomColor = Color(0xFF1D5D6D);
-  // Title & subtitle positions
+
   static const double titleX = 105, titleY = 40;
   static const double subX = 51, subY = 86;
-  // Coupon positions & dimensions
+
   static const double couponW = 329, couponH = 129;
   static const double couponX = 32, couponY = 155;
   static const double couponGap = 16;
-  // Coupon inner positions
+
   static const double cTitleRelX = 66 - couponX;
   static const double cTitleRelY = 169 - couponY - 8;
   static const double cDescRelX = 98 - couponX - 8;
@@ -36,7 +35,6 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
   static const double cTimeRelX = 248 - couponX;
   static const double cTimeRelY = 238 - couponY + 8;
 
-  // State
   bool loading = true;
   bool error = false;
   List<CouponData> coupons = [];
@@ -110,7 +108,7 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
                   ),
                 ),
               ),
-              // Subtitle
+
               Positioned(
                 left: subX * s,
                 top: subY * s,
@@ -124,7 +122,7 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
                   ),
                 ),
               ),
-              // Main content
+
               if (loading)
                 const Center(child: CircularProgressIndicator())
               else if (error)
@@ -149,18 +147,33 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
                   ),
                 )
               else
-                for (int i = 0; i < coupons.length; i++)
-                  Positioned(
-                    left: couponX * s,
-                    top: (couponY + i * (couponH + couponGap)) * s,
-                    width: couponW * s,
-                    height: couponH * s,
-                    child: CouponWidget(
-                      data: coupons[i],
-                      scale: s,
-                      onTap: () => _claimFlow(context, coupons[i]),
+                Positioned(
+                  top: couponY * s,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: ListView.separated(
+                    padding: EdgeInsets.only(
+                      left: couponX * s,
+                      right: couponX * s,
+                      bottom: 20 * s,
                     ),
+                    itemCount: coupons.length,
+                    separatorBuilder: (context, index) =>
+                        SizedBox(height: couponGap * s),
+                    itemBuilder: (context, i) {
+                      return SizedBox(
+                        width: couponW * s,
+                        height: couponH * s,
+                        child: CouponWidget(
+                          data: coupons[i],
+                          scale: s,
+                          onTap: () => _claimFlow(context, coupons[i]),
+                        ),
+                      );
+                    },
                   ),
+                ),
             ],
           ),
         ),
@@ -199,10 +212,7 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
     final response = await http.post(
       Uri.parse('$_baseUrl/Coupons/redeem'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'userId': userId,
-        'couponId': coupon.id, // تأكدي أن CouponData فيه id
-      }),
+      body: jsonEncode({'userId': userId, 'couponId': coupon.id}),
     );
 
     if (response.statusCode != 200) {
@@ -233,7 +243,6 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
   }
 }
 
-// -------------------- Coupon Widget --------------------
 class CouponWidget extends StatelessWidget {
   const CouponWidget({
     super.key,
@@ -355,7 +364,6 @@ class CouponWidget extends StatelessWidget {
   }
 }
 
-// -------------------- Popups --------------------
 class _PopupShell extends StatelessWidget {
   const _PopupShell({
     required this.scale,
@@ -367,7 +375,7 @@ class _PopupShell extends StatelessWidget {
   final VoidCallback onClose;
   static const Color bg = Colors.white;
   static const Color stroke = Color(0xFF1D5D6D);
-  //static const Color teal = Color(0xFF1D5D6D);
+
   static const Color textGrey = Color(0xFF8E8E8E);
   @override
   Widget build(BuildContext context) {
@@ -438,11 +446,9 @@ class _ConfirmClaimDialog extends StatelessWidget {
           ),
           SizedBox(height: 20 * scale),
 
-          // YES / NO buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // NO
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade300,
@@ -458,7 +464,6 @@ class _ConfirmClaimDialog extends StatelessWidget {
 
               SizedBox(width: 16 * scale),
 
-              // YES
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1D5D6D),

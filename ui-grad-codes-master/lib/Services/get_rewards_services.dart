@@ -15,7 +15,6 @@ class GetRewardsServices {
 
     final decoded = jsonDecode(res.body);
 
-    // 🔴 IMPORTANT: لو الـ API يرجّع List مباشرة
     final List list = decoded is List ? decoded : (decoded['data'] ?? []);
 
     return list

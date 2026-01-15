@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
-
+import '../models/user_session.dart';
 import 'GetRewards_page.dart';
 import 'MyRewards_page.dart';
 import '../core/session_store.dart';
 import 'login_page.dart';
+import '../Services/auth_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   static const Color tealDark = Color(0xFF1D5D6D);
   static const Color tealMid = Color(0xFF4F8C97);
   static const Color tealLight = Color(0xFF9ED0DA);
+
+  bool _isRefreshing = false;
 
   String _formatPoints(int points) {
     final s = points.toString();
@@ -23,6 +31,29 @@ class HomePage extends StatelessWidget {
       }
     }
     return buf.toString();
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      final user = SessionStore.current;
+      if (user != null) {}
+
+      await Future.delayed(const Duration(seconds: 1));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to refresh data')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
   }
 
   Future<void> _showLogoutDialog(BuildContext context) async {
@@ -80,11 +111,7 @@ class HomePage extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
-
-                          // ✅ Clear session (logout)
-                          SessionStore.current = null;
-
-                          // ✅ back to login
+                          SessionStore.clear();
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
@@ -145,7 +172,6 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-
         leading: IconButton(
           icon: Image.asset(
             'assets/images/logout.png',
@@ -155,6 +181,25 @@ class HomePage extends StatelessWidget {
           ),
           onPressed: () => _showLogoutDialog(context),
         ),
+
+        actions: [
+          _isRefreshing
+              ? const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: tealDark,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.refresh, color: tealDark, size: 28),
+                  onPressed: _refreshData,
+                ),
+        ],
       ),
       extendBodyBehindAppBar: true,
       body: Container(
@@ -199,7 +244,9 @@ class HomePage extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => const GetRewardsPage(),
                           ),
-                        );
+                        ).then((_) {
+                          setState(() {});
+                        });
                       },
                     ),
                     _RewardBox(

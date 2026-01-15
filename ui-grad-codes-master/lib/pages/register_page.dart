@@ -114,6 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       SessionStore.current = session;
+      SessionStore.current!.startPointsAutoRefresh();
 
       if (!mounted) return;
 

@@ -113,6 +113,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       SessionStore.current = session;
+      SessionStore.current!.startPointsAutoRefresh();
 
       if (!mounted) return;
 
