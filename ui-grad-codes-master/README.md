@@ -22,9 +22,7 @@ This application is designed for shopping malls where users can earn points when
 - Flutter (Dart)
 - REST API Integration
 - Dio (HTTP requests)
-- Figma (UI/UX design)
-- Git and GitHub (version control)
-- VS Code (development environment)
+
 
 ## Routes
 
