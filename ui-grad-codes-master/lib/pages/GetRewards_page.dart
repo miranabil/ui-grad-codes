@@ -81,7 +81,6 @@ class _GetRewardsPageState extends State<GetRewardsPage> {
         child: SafeArea(
           child: Stack(
             children: [
-              // Back button
               Positioned(
                 left: 8,
                 top: 4,

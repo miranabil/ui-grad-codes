@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
 import 'home_page.dart';
 import 'register_page.dart';
 import '../Services/auth_service.dart';
