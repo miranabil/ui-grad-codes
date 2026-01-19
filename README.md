@@ -1,16 +1,50 @@
-# g_project
+# Graduation project frontend
 
-A new Flutter project.
+A Flutter graduation project for shopping malls loyalty and rewards system.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This application is designed for shopping malls where users can earn points when they buy from stores inside the mall, then redeem these points for discounts and coupons.
 
-A few resources to get you started if this is your first Flutter project:
+## Functionalities
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Mall loyalty and rewards system.
+- Earn points after purchasing from stores inside the mall.
+- View total points balance.
+- Browse available rewards and discounts.
+- Redeem points to get coupons/discounts.
+- View redeemed coupons inside "My Rewards".
+- API integration to fetch and display data dynamically.
+- Full UI designed on Figma and implemented using Flutter.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Tools and Technologies Used
+
+- Flutter (Dart)
+- REST API Integration
+- Dio (HTTP requests)
+
+
+## Routes
+
+The application uses navigation routes to move between pages:
+
+- `/` : Loading Page
+- `/login` : Login Page
+- `/register` : Register Page
+- `/verify` : Verify Page
+- `/home` : Home Page
+- `/getRewards` : Get Rewards Page
+- `/myRewards` : My Rewards Page
+
+
+## How to Download and Run the Project
+
+### Option 1: Download ZIP
+1. Open the GitHub repository.
+2. Click **Code**.
+3. Select **Download ZIP**.
+4. Extract the ZIP file.
+
+### Option 2: Clone the Repository
+```bash
+git clone https://github.com/miranabil/ui-grad-codes.git
