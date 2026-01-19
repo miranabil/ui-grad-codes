@@ -37,3 +37,14 @@ The application uses navigation routes to move between pages:
 - `/myRewards` : My Rewards Page
 
 
+## How to Download and Run the Project
+
+### Option 1: Download ZIP
+1. Open the GitHub repository.
+2. Click **Code**.
+3. Select **Download ZIP**.
+4. Extract the ZIP file.
+
+### Option 2: Clone the Repository
+```bash
+git clone https://github.com/miranabil/ui-grad-codes.git
